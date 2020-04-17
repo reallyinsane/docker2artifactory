@@ -30,7 +30,7 @@ class DockerRegistryAccess:
         self.anon_access = HTTPAccess(url=self.url, ignore_cert=self.ignore_cert)
         self.valid_methods = ['token', 'basic']
         if not method:
-            self.method = 'token'
+            self.method = 'basic'
         else:
             if method not in self.valid_methods:
                 raise ValueError("Invalid method '%s' for DockerRegistryAccess" % method)
@@ -69,7 +69,7 @@ class DockerRegistryAccess:
             # it with the credentials or we may be missing certain images only that user can use.
             if self.username and self.password and not self.token_access.has_token():
                 self.token_access.populate_generic_token()
-        out = self.access.get_code_and_msg_wrapper(path)
+        out = self.basic_access.get_code_and_msg_wrapper(path)
         if not out:
             return False
         output, response = out
@@ -85,7 +85,7 @@ class DockerRegistryAccess:
             link_value = response.headers['link']
             results = self.link_reg_ex.findall(link_value)
             if results and len(results) == 1:
-                return output['repositories'] + self.get_catalog(self.access.get_relative_url(results[0]))
+                return output['repositories'] + self.get_catalog(self.basic_access.get_relative_url(results[0]))
         return output['repositories']
 
     '''
@@ -96,9 +96,9 @@ class DockerRegistryAccess:
     '''
     def get_tags(self, image, path=None):
         if not path:
-            out = self.access.get_code_and_msg_wrapper("/v2/" + image + "/tags/list")
+            out = self.basic_access.get_code_and_msg_wrapper("/v2/" + image + "/tags/list")
         else:
-            out = self.access.get_code_and_msg_wrapper(path)
+            out = self.basic_access.get_code_and_msg_wrapper(path)
         if not out:
             return False
         output, response = out
@@ -115,7 +115,7 @@ class DockerRegistryAccess:
             link_value = response.headers['link']
             results = self.link_reg_ex.findall(link_value)
             if results and len(results) == 1:
-                return output['tags'] + self.get_tags(image, self.access.get_relative_url(results[0]))
+                return output['tags'] + self.get_tags(image, self.basic_access.get_relative_url(results[0]))
         return output['tags']
 
     '''
@@ -149,7 +149,7 @@ class DockerRegistryAccess:
         @param file - The file to store the contents into
     '''
     def download_layer(self, image, layer, file):
-        response = self.access.get_raw_call_wrapper(url="/v2/" + image + "/blobs/" + layer)
+        response = self.basic_access.get_raw_call_wrapper(url="/v2/" + image + "/blobs/" + layer)
         # Write the contents into a file and verify the sha256 while we are at it
         if response.getcode() == 200:
             try:
