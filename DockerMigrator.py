@@ -218,8 +218,8 @@ def gcr_migration(args, work_dir):
     @param source - The source access
 '''
 def common_migration(args, work_dir, source):
-    if not source.verify_is_v2():
-        sys.exit("The provided URL does not appear to be a valid V2 repository.")
+    #if not source.verify_is_v2():
+     #   sys.exit("The provided URL does not appear to be a valid V2 repository.")
 
     # Set up and verify the connection to Artifactory
     art_access = setup_art_access(args.artifactory, args.username, args.password, args.repo, args.ignore_cert)
