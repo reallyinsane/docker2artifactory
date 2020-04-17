@@ -9,7 +9,7 @@ import urlparse
 import logging
 import mmap
 import os
-
+urllib2.getproxies = lambda x = None: {}
 
 class HTTPAccess(object):
     def __init__(self, url, username=None, password=None, ignore_cert=False, exlog=False):
@@ -23,7 +23,9 @@ class HTTPAccess(object):
         self.xml = re.compile(r'^application/(?:[^;]+\+)?xml(?:;.+)?$')
         self.exlog = exlog
         # Install custom redirect handler
-        opener = urllib2.build_opener(CleanAuthenticationHeadersOnRedirectHandler)
+        proxy = urllib2.ProxyHandler({}) # Pass empty dictionary to bypass proxy
+        opener = urllib2.build_opener(proxy)
+        urllib2.install_opener(opener)
         urllib2.install_opener(opener)
         # Set up the connection
         headers = {'User-Agent': 'Docker registry to Artifactory migrator'}
@@ -117,6 +119,8 @@ class HTTPAccess(object):
             body = fobj.getvalue()
             fobj.close()
             headers['Content-Type'] = 'application/xml'
+        enc = base64.b64encode("docker:docker")
+        headers['Authorization'] = "Basic " + enc
         scheme, host, rootpath, extraheaders = self.connection
         headers.update(extraheaders)
         url = urlparse.urlunsplit((scheme, host, rootpath + path, '', ''))
